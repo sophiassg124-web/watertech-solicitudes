@@ -1,4 +1,8 @@
 streamlit
 gspread
 google-auth
+<<<<<<< HEAD
 pandas
+=======
+pandas
+>>>>>>> e13ff151ef0d67287da09b693f8f3d0e5b382bf2
