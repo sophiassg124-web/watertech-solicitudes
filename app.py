@@ -1,7 +1,6 @@
+from datetime import date, datetime
 import csv
 import sqlite3
-import streamlit as st
-from datetime import date, datetime
 from pathlib import Path
 import urllib.parse
 import base64
@@ -9,6 +8,7 @@ import base64
 # Importar librerías para Google Sheets
 import gspread
 from google.oauth2.service_account import Credentials
+import streamlit as st
 
 # --- CONFIGURACIÓN DE LA PÁGINA ---
 st.set_page_config(
@@ -70,12 +70,13 @@ def init_db():
 
 init_db()
 
-# --- FUNCIÓN PARA GUARDAR EN GOOGLE SHEETS (ORDENADA DESDE COLUMNA A) ---
+# --- FUNCIÓN PARA GUARDAR EN GOOGLE SHEETS (USANDO credentials.json LOCAL) ---
 def guardar_en_google_sheets(summary_dict):
     scope = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive"
     ]
+    
     creds_path = ASSET_DIR / "credentials.json"
     
     if creds_path.exists():
@@ -113,7 +114,9 @@ def guardar_en_google_sheets(summary_dict):
             summary_dict["Fecha prevista de compra/entrega"]
         ]
         
-        sheet.update(f'A{next_row}', [fila], value_input_option='USER_ENTERED')
+        sheet.update(values=[fila], range_name=f'A{next_row}', value_input_option='USER_ENTERED')
+    else:
+        raise Exception(f"No se encontró el archivo credentials.json en: {creds_path}")
 
 NORMS = {
     "Bogotá D.C.": "Resolución SIC 69940 de 2025: confirmar aplicabilidad al proyecto. Norma local adicional: por verificar con Watertech.",
@@ -521,19 +524,6 @@ with col_next:
                     st.markdown("""
                         <div style="background-color: #FDEDEC; border-left: 4px solid #E74C3C; padding: 12px; margin: 15px 0; color: #C0392B; border-radius: 4px; font-weight: bold;">
                             Por favor completa todos los campos obligatorios antes de continuar.
-                        </div>
-                    """, unsafe_allow_html=True)
-                else:
-                    st.session_state.step += 1
-                    st.rerun()
-            elif st.session_state.step == 3:
-                selections = st.session_state.get('meter_selections', [])
-                has_excel = bool(st.session_state.get('excel_name') and st.session_state.get('excel_name') != "Ningún archivo seleccionado")
-                
-                if not selections and not has_excel:
-                    st.markdown("""
-                        <div style="background-color: #FDEDEC; border-left: 4px solid #E74C3C; padding: 12px; margin: 15px 0; color: #C0392B; border-radius: 4px; font-weight: bold;">
-                            Por favor selecciona al menos un medidor con su respectiva cantidad o adjunta un archivo en Excel antes de continuar.
                         </div>
                     """, unsafe_allow_html=True)
                 else:
